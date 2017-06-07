@@ -1,0 +1,79 @@
+{% extends "AppBundle::layout.html.twig" %}
+{%block content%}
+    
+    {% for elemento in alumnos %}
+        <ul class="list">
+            <li class="item" data-cuil="{{elemento.cuil}}">
+                {{elemento.nombre}}
+                {{elemento.apellido}}
+            </li>
+            <li class="map" data-cuil="{{elemento.cuil}}" >
+                <p>Ver en el mapa</p>
+            </li>
+        </ul>
+    {%endfor%}
+    <form>
+        cuit <input id="buscador"  type="text"><br>
+        <input class="cuit" value="Buscar" type="button">
+    </form>
+    <script>
+        var latitud=0;
+        var longitud=0;
+
+
+ //       $(document).ready(function() {
+   //     $(".item").click(function() {
+        //    alert("cuil:"+$(this).data("cuil"));
+       //
+       // });
+        //});
+     $(".item").click(function() {
+         $.getJSON("https://soa.afip.gob.ar/sr-padron/v2/persona/"+$(this).data("cuil"), function (data) {
+             alert("Nombre:"+data.data.nombre +"\n"+
+                    "Tipo Persona:"+data.data.tipoPersona +"\n"+"Tipo De Clave: "+ data.data.tipoClave+"\n"+"Direccion: "+ data.data.domicilioFiscal.direccion+"\n"+"Localidad: "+ data.data.domicilioFiscal.localidad)
+         });
+     });
+
+     $(".cuit").click(function() {
+         var cuit= document.getElementById("buscador").value;
+         $.getJSON("https://soa.afip.gob.ar/sr-padron/v2/persona/"+cuit, function (data) {
+             console.log(data.data);
+            if(data.data.domicilioFiscal.direccion){
+                console.log('entra');
+                alert("Nombre:" + data.data.nombre + "\n" +
+                        "Tipo Persona:" + data.data.tipoPersona + "\n" + "Tipo De Clave: " + data.data.tipoClave + "\n" + "Direccion: " + data.data.domicilioFiscal.direccion + "\n" + "Localidad: " + data.data.domicilioFiscal.localidad)
+               $.getJSON("https://maps.googleapis.com/maps/api/geocode/json?address=" + data.data.domicilioFiscal.direccion + "&key=AIzaSyDOrsRsupsXpwHVPEqAKWHvZtBDSTCOEt4", function (coordenada) {
+                    latitud = (coordenada.results[0].geometry.location.lat);
+                   longitud = (coordenada.results[0].geometry.location.lng);
+                   initMap(latitud, longitud);   //llamo a la funcion de google declarada abajo con los parametrod de la fip
+              });
+            }else{
+                console.log('entra 2');
+                alert("Esta persona no tiene una direccion valida");
+            }
+         });
+     });
+
+    </script>
+
+    <div id="map"></div>
+    <script>
+        var map;
+        function initMap(lat,long) {
+            var map = new google.maps.Map(document.getElementById('map'), {  //
+                center: {lat: lat, lng: long},
+                zoom: 20
+            });
+            var marker = new google.maps.Marker({     //para qe aparezca el iconito rojo
+                position:{lat: lat, lng: long},
+                map: map,
+                title: 'Hello World!'
+            });
+            marker.setMap(map);   //llama a las dos var anteriores y las ejecuta
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDOrsRsupsXpwHVPEqAKWHvZtBDSTCOEt4&callback=initMap"
+            async defer></script>
+   
+{%endblock%}
+

@@ -1,0 +1,4 @@
+impimir_array:
+    path: /nombres
+    defaults: { _controller: AppBundle:Prueba:index }
+
